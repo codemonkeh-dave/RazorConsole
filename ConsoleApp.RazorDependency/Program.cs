@@ -1,8 +1,8 @@
-﻿using ConsoleApp.Render;
-using ConsoleApp.Render.Views;
+﻿using ConsoleApp.RazorDependency.Views;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -15,38 +15,27 @@ internal class Program
     static async Task Main(string[] args)
     {
         IServiceCollection services = new ServiceCollection();
-        services.AddRazor();
+        services.AddLogging();
 
-        var render = services.BuildServiceProvider().GetService<HtmlRenderer>();
+        IServiceProvider serviceProvider = services.BuildServiceProvider();
+        ILoggerFactory loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
 
-        var html = await render.Dispatcher.InvokeAsync(async () =>
+
+        await using var htmlRenderer = new HtmlRenderer(serviceProvider, loggerFactory);
+
+        var html = await htmlRenderer.Dispatcher.InvokeAsync(async () =>
         {
-            var dictionary = new Dictionary<string, object>
-            {
-                { "Message", "Hello from the Render Message component!" }
-            };
+            var dictionary = new Dictionary<string, object?>
+    {
+        { "Message", "Hello from the Render Message component!" }
+    };
 
             var parameters = ParameterView.FromDictionary(dictionary);
-            var output = await render.RenderComponentAsync<RenderMessage>(parameters);
-
-            return output.ToHtmlString();
-        });
-        Console.WriteLine(Thread.CurrentThread.ManagedThreadId);
-
-        var html2 = await render.Dispatcher.InvokeAsync(async () =>
-        {
-            Console.WriteLine(Thread.CurrentThread.ManagedThreadId);
-            var dictionary = new Dictionary<string, object>
-            {
-                { "Message", "Message 2" }
-            };
-
-            var parameters = ParameterView.FromDictionary(dictionary);
-            var output = await render.RenderComponentAsync<RenderMessage>(parameters);
+            var output = await htmlRenderer.RenderComponentAsync<RenderMessage>(parameters);
 
             return output.ToHtmlString();
         });
 
-        Console.WriteLine("Hello, World!");
+        Console.WriteLine(html);
     }
 }
