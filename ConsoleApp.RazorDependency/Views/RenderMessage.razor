@@ -1,8 +1,22 @@
-﻿<h1>Render Message</h1>
+﻿@using ConsoleApp.RazorDependency.Models
 
-<p>@Message</p>
+<h1>Render Message</h1>
+
+<p>@Message</p><br/>
+
+<div>
+    @foreach (var person in People)
+    {
+        <span>@person.Name</span>
+
+        <br />
+    }
+</div>
 
 @code {
     [Parameter]
     public string Message { get; set; }
+
+    [Parameter]
+    public List<Person> People { get; set; }
 }
